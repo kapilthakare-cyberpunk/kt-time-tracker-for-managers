@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .break-btn { width: 150px; }
+        .status-active { background-color: #d4edda; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Time Tracker</h2>
+        <div class="row mb-4">
+            <div class="col">
+                <select id="employeeSelect" class="form-select">
+                    <option value="">Select Employee</option>
+                    <!-- Sales Team -->
+                    <optgroup label="Sales Team">
+                        <option value="Samiir Shaikh">Samiir Shaikh</option>
+                        <option value="Prakash Prasad">Prakash Prasad</option>
+                        <option value="Sujata Virkar">Sujata Virkar</option>
+                    </optgroup>
+                    <!-- Registration Team -->
+                    <optgroup label="Registration Team">
+                        <option value="Shiwani Gade">Shiwani Gade</option>
+                        <option value="Rupali Yawatkar">Rupali Yawatkar</option>
+                    </optgroup>
+                    <!-- Trainee Sales -->
+                    <optgroup label="Trainee Sales">
+                        <option value="Dipti Pawar">Dipti Pawar</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col">
+                <button id="loginBtn" class="btn btn-success break-btn">Login</button>
+                <button id="logoutBtn" class="btn btn-danger break-btn">Logout</button>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col">
+                <button id="lunchStartBtn" class="btn btn-warning break-btn">Lunch Break Start</button>
+                <button id="lunchEndBtn" class="btn btn-info break-btn">Lunch Break End</button>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col">
+                <button id="shortBreakStartBtn" class="btn btn-warning break-btn">Short Break Start</button>
+                <button id="shortBreakEndBtn" class="btn btn-info break-btn">Short Break End</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <h4>Today's Activity Log</h4>
+                <div id="activityLog" class="border p-3" style="max-height: 300px; overflow-y: auto;">
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col">
+                <h4>Employee Status</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Last Activity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statusTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
