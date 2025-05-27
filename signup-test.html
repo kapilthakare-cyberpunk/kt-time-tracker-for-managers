@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign-Up Test - Time Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Time Tracker Sign-Up Test</h1>
+    <p><strong>Live URL:</strong> <a href="https://teamtimetracker-740e6.web.app" target="_blank">https://teamtimetracker-740e6.web.app</a></p>
+    
+    <div id="status" class="status info">
+        Ready to test authentication...
+    </div>
+
+    <div>
+        <button id="testAuth" class="btn-primary">🔍 Test Google Sign-In</button>
+        <button id="signOut" class="btn-danger" style="display:none;">🚪 Sign Out</button>
+        <button id="checkTeam" class="btn-success" style="display:none;">👥 Check Team Access</button>
+    </div>
+
+    <div id="userInfo" style="margin-top: 20px;"></div>
+    <div id="teamInfo" style="margin-top: 20px;"></div>
+
+    <h2>📝 Test Steps:</h2>
+    <ol>
+        <li>Click "Test Google Sign-In" to authenticate</li>
+        <li>Select your Google account</li>
+        <li>Check if you're in the approved team list</li>
+        <li>If successful, you'll see user information and team status</li>
+    </ol>
+
+    <h2>👥 Approved Team Members:</h2>
+    <ul>
+        <li><strong>Sales Team:</strong> Samiir Shaikh, Prakash Prasad, Sujata Virkar</li>
+        <li><strong>Registration Team:</strong> Shiwani Gade, Rupali Yawatkar</li>
+        <li><strong>Trainee Sales:</strong> Dipti Pawar</li>
+        <li><strong>Manager:</strong> Kapil Thakare</li>
+    </ul>
+
+    <script type="module">
+        import { auth } from './firebase-config.js';
+        import { signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+        const status = document.getElementById('status');
+        const userInfo = document.getElementById('userInfo');
+        const teamInfo = document.getElementById('teamInfo');
+        const testAuthBtn = document.getElementById('testAuth');
+        const signOutBtn = document.getElementById('signOut');
+        const checkTeamBtn = document.getElementById('checkTeam');
+
+        // Team configuration (should match script.js)
+        const TEAM_CONFIG = {
+            "Sales Team": ["Samiir Shaikh", "Prakash Prasad", "Sujata Virkar"],
+            "Registration Team": ["Shiwani Gade", "Rupali Yawatkar"],
+            "Trainee Sales": ["Dipti Pawar"],
+            "Manager": ["Kapil Thakare"]
+        };
+
+        let currentUser = null;
+
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            console.log("Auth State Changed:", user ? user.email : "No user");
+            currentUser = user;
+            updateUI(user);
+        });
+
+        function updateUI(user) {
+            if (user) {
+                status.innerHTML = '✅ Authentication successful!';
+                status.className = 'status success';
+                userInfo.innerHTML = `
+                    <h3>👤 User Information:</h3>
+                    <p><strong>Name:</strong> ${user.displayName || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>UID:</strong> ${user.uid}</p>
+                    <p><strong>Photo:</strong> ${user.photoURL ? `<img src="${user.photoURL}" width="50" style="border-radius: 50%;">` : 'N/A'}</p>
+                `;
+                testAuthBtn.style.display = 'none';
+                signOutBtn.style.display = 'inline-block';
+                checkTeamBtn.style.display = 'inline-block';
+                checkTeamAccess();
+            } else {
+                status.innerHTML = '❌ Not authenticated';
+                status.className = 'status error';
+                userInfo.innerHTML = '';
+                teamInfo.innerHTML = '';
+                testAuthBtn.style.display = 'inline-block';
+                signOutBtn.style.display = 'none';
+                checkTeamBtn.style.display = 'none';
+            }
+        }
+
+        function checkTeamAccess() {
+            if (!currentUser) return;
+
+            const isTeamMember = Object.values(TEAM_CONFIG).flat().includes(currentUser.displayName);
+            
+            if (isTeamMember) {
+                // Find which team
+                let userTeam = null;
+                for (const [team, members] of Object.entries(TEAM_CONFIG)) {
+                    if (members.includes(currentUser.displayName)) {
+                        userTeam = team;
+                        break;
+                    }
+                }
+                
+                teamInfo.innerHTML = `
+                    <h3>✅ Team Access Granted</h3>
+                    <p><strong>Team:</strong> ${userTeam}</p>
+                    <p><strong>Status:</strong> <span style="color: green;">APPROVED - Can access Time Tracker</span></p>
+                `;
+            } else {
+                teamInfo.innerHTML = `
+                    <h3>❌ Team Access Denied</h3>
+                    <p><strong>Status:</strong> <span style="color: red;">NOT APPROVED - Access would be denied</span></p>
+                    <p><strong>Reason:</strong> Your display name "${currentUser.displayName}" is not in the approved team list.</p>
+                `;
+            }
+        }
+
+        // Test authentication
+        testAuthBtn.addEventListener('click', async () => {
+            console.log("Testing Google Authentication...");
+            status.innerHTML = '🔄 Testing authentication...';
+            status.className = 'status info';
+            
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            
+            try {
+                const result = await signInWithPopup(auth, provider);
+                console.log("✅ Auth Success:", result.user);
+            } catch (error) {
+                console.error("❌ Auth Error:", error);
+                status.innerHTML = `❌ Error: ${error.code} - ${error.message}`;
+                status.className = 'status error';
+            }
+        });
+
+        // Sign out
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                console.log("Signed out successfully");
+            } catch (error) {
+                console.error("Sign out error:", error);
+            }
+        });
+
+        // Manual team check
+        checkTeamBtn.addEventListener('click', () => {
+            checkTeamAccess();
+        });
+
+        // Log Firebase config (without sensitive data)
+        console.log("Firebase initialized with project:", auth.app.options.projectId);
+        console.log("Team configuration loaded:", TEAM_CONFIG);
+    </script>
+</body>
+</html>

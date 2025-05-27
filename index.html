@@ -15,25 +15,25 @@
         <h2>Time Tracker</h2>
         
         <!-- Login Section -->
-        <div id="loginSection">
+        <div id="loginSection" style="display: block;">
             <div class="row">
                 <div class="col">
                     <button onclick="signInWithGoogle()" class="btn btn-danger"> <!-- Changed to Google -->
                         <!-- Optional: Add a Google logo here e.g., <img src="google-logo.png" alt="Google" style="width: 20px; margin-right: 10px;"> -->
                         Sign in with Google
                     </button>
+                    <button onclick="testAuth()" class="btn btn-secondary ms-2">TEST AUTH</button>
                 </div>
             </div>
         </div>
 
         <!-- Time Tracker Section -->
-        <div id="timeTrackerSection" style="display: none;">
-            <div class="row mb-4">
-                <div class="col">
-                    <button id="loginBtn" class="btn btn-success break-btn">Login</button>
-                    <button id="logoutBtn" class="btn btn-danger break-btn">Logout</button>
-                </div>
+        <div id="timeTrackerSection" style="display: none;">        <div class="row mb-4">
+            <div class="col">
+                <button id="loginBtn" class="btn btn-success break-btn">Login</button>
+                <button id="logoutBtn" class="btn btn-danger break-btn">Logout</button>
             </div>
+        </div>
 
             <div class="row mb-4">
                 <div class="col">
@@ -60,11 +60,6 @@
     </div>
 
     <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js';
-        import { getAuth } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js';
-    </script>
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="script.js"></script>
 </body>

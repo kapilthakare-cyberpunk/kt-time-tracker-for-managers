@@ -1,0 +1,17 @@
+{
+  "name": "time-tracker",
+  "version": "1.0.0",
+  "description": "Firebase Time Tracker Application",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 5500",
+    "test:duration": "node -e 'import(\"./utils/duration.js\").then(m=>console.log(m.calculateDuration(new Date(2025,0,1,10,0), new Date(2025,0,1,10,30))))'",
+    "test:rules": "firebase emulators:exec --only firestore \"npm run test:rules\"",
+    "test:activities": "jest tests/activityLog.test.js"
+  },
+  "dependencies": {
+    "firebase": "^11.8.1"
+  }
+}
