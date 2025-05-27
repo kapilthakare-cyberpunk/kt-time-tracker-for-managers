@@ -13,76 +13,59 @@
 <body>
     <div class="container mt-4">
         <h2>Time Tracker</h2>
-        <div class="row mb-4">
-            <div class="col">
-                <select id="employeeSelect" class="form-select">
-                    <option value="">Select Employee</option>
-                    <!-- Sales Team -->
-                    <optgroup label="Sales Team">
-                        <option value="Samiir Shaikh">Samiir Shaikh</option>
-                        <option value="Prakash Prasad">Prakash Prasad</option>
-                        <option value="Sujata Virkar">Sujata Virkar</option>
-                    </optgroup>
-                    <!-- Registration Team -->
-                    <optgroup label="Registration Team">
-                        <option value="Shiwani Gade">Shiwani Gade</option>
-                        <option value="Rupali Yawatkar">Rupali Yawatkar</option>
-                    </optgroup>
-                    <!-- Trainee Sales -->
-                    <optgroup label="Trainee Sales">
-                        <option value="Dipti Pawar">Dipti Pawar</option>
-                    </optgroup>
-                </select>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col">
-                <button id="loginBtn" class="btn btn-success break-btn">Login</button>
-                <button id="logoutBtn" class="btn btn-danger break-btn">Logout</button>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col">
-                <button id="lunchStartBtn" class="btn btn-warning break-btn">Lunch Break Start</button>
-                <button id="lunchEndBtn" class="btn btn-info break-btn">Lunch Break End</button>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col">
-                <button id="shortBreakStartBtn" class="btn btn-warning break-btn">Short Break Start</button>
-                <button id="shortBreakEndBtn" class="btn btn-info break-btn">Short Break End</button>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col">
-                <h4>Today's Activity Log</h4>
-                <div id="activityLog" class="border p-3" style="max-height: 300px; overflow-y: auto;">
+        
+        <!-- Login Section -->
+        <div id="loginSection">
+            <div class="row">
+                <div class="col">
+                    <button onclick="signInWithGoogle()" class="btn btn-danger"> <!-- Changed to Google -->
+                        <!-- Optional: Add a Google logo here e.g., <img src="google-logo.png" alt="Google" style="width: 20px; margin-right: 10px;"> -->
+                        Sign in with Google
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col">
-                <h4>Employee Status</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th>Last Activity</th>
-                        </tr>
-                    </thead>
-                    <tbody id="statusTable">
-                    </tbody>
-                </table>
+        <!-- Time Tracker Section -->
+        <div id="timeTrackerSection" style="display: none;">
+            <div class="row mb-4">
+                <div class="col">
+                    <button id="loginBtn" class="btn btn-success break-btn">Login</button>
+                    <button id="logoutBtn" class="btn btn-danger break-btn">Logout</button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col">
+                    <button id="lunchStartBtn" class="btn btn-warning break-btn">Lunch Break Start</button>
+                    <button id="lunchEndBtn" class="btn btn-info break-btn">Lunch Break End</button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col">
+                    <button id="shortBreakStartBtn" class="btn btn-warning break-btn">Short Break Start</button>
+                    <button id="shortBreakEndBtn" class="btn btn-info break-btn">Short Break End</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <h4>Today's Activity Log</h4>
+                    <div id="activityLog" class="border p-3" style="max-height: 300px; overflow-y: auto;">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js';
+    </script>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

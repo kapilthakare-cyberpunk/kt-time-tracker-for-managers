@@ -3,15 +3,16 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  // Your Firebase configuration object
-  // Get this from Firebase Console -> Project Settings
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "your-messaging-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyC2oXM977OYHvFCzXlDrKVcAPZOiMSKtEc",
+  authDomain: "teamtimetracker-740e6.firebaseapp.com",
+  projectId: "teamtimetracker-740e6",
+  storageBucket: "teamtimetracker-740e6.firebasestorage.app",
+  messagingSenderId: "646701134730",
+  appId: "1:646701134730:web:d8dc2ee4e25cf2bf6bce73",
+  measurementId: "G-PN81N1881Q"
 };
 
 // Initialize Firebase

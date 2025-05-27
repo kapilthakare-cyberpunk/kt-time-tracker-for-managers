@@ -1,0 +1,339 @@
+
+
+Great choice! Firebase provides all the services we need for free, including hosting, authentication, and real-time database. Let me help you implement the solution using Firebase.
+
+1. First, update your project structure to use Firebase. Create these new files:
+
+```javascript name=firebase-config.js
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+const firebaseConfig = {
+  // Your Firebase configuration object
+  // Get this from Firebase Console -> Project Settings
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "your-messaging-sender-id",
+  appId: "your-app-id"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { auth, db };
+```
+
+2. Update the main script to use Firebase:
+
+```javascript name=script.js
+import { auth, db } from './firebase-config.js';
+import { 
+    collection, addDoc, query, where, 
+    orderBy, getDocs, Timestamp 
+} from "firebase/firestore";
+import { 
+    signInWithPopup, 
+    GithubAuthProvider 
+} from "firebase/auth";
+
+// Telegram bot configuration
+const TELEGRAM_BOT_TOKEN = 'your_bot_token';
+const TELEGRAM_CHAT_ID = 'your_chat_id';
+
+// Team configuration
+const TEAM_CONFIG = {
+    "Sales Team": ["Samiir Shaikh", "Prakash Prasad", "Sujata Virkar"],
+    "Registration Team": ["Shiwani Gade", "Rupali Yawatkar"],
+    "Trainee Sales": ["Dipti Pawar"]
+};
+
+// Authentication state observer
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('timeTrackerSection').style.display = 'block';
+        loadUserData(user);
+    } else {
+        // User is signed out
+        document.getElementById('loginSection').style.display = 'block';
+        document.getElementById('timeTrackerSection').style.display = 'none';
+    }
+});
+
+// GitHub Authentication
+async function signInWithGitHub() {
+    const provider = new GithubAuthProvider();
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        // Check if user is part of the team
+        const isTeamMember = Object.values(TEAM_CONFIG)
+            .flat()
+            .includes(user.displayName);
+        
+        if (!isTeamMember) {
+            await auth.signOut();
+            alert('Access denied. Only team members can log in.');
+            return;
+        }
+    } catch (error) {
+        console.error("Error during GitHub sign-in:", error);
+        alert('Failed to sign in with GitHub');
+    }
+}
+
+// Log activity to Firestore and send Telegram notification
+async function logActivity(activity) {
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            alert('Please sign in first');
+            return;
+        }
+
+        // Add activity to Firestore
+        const activityRef = await addDoc(collection(db, "activities"), {
+            userId: user.uid,
+            userName: user.displayName,
+            activity: activity,
+            timestamp: Timestamp.now()
+        });
+
+        // Send Telegram notification
+        const message = `👤 ${user.displayName}\n📝 ${activity}\n⏰ ${new Date().toISOString()}`;
+        await sendTelegramNotification(message);
+
+        updateUI();
+    } catch (error) {
+        console.error("Error logging activity:", error);
+        alert('Failed to log activity');
+    }
+}
+
+// Send Telegram notification
+async function sendTelegramNotification(message) {
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+        await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+    } catch (error) {
+        console.error("Error sending Telegram notification:", error);
+    }
+}
+
+// Update UI with today's activities
+async function updateUI() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const activitiesQuery = query(
+        collection(db, "activities"),
+        where("timestamp", ">=", Timestamp.fromDate(startOfDay)),
+        orderBy("timestamp", "desc")
+    );
+
+    try {
+        const querySnapshot = await getDocs(activitiesQuery);
+        const activityLog = document.getElementById('activityLog');
+        activityLog.innerHTML = '';
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const activityDiv = document.createElement('div');
+            activityDiv.className = 'mb-2';
+            activityDiv.innerHTML = `
+                <strong>${data.timestamp.toDate().toISOString().replace('T', ' ').substr(0, 19)}</strong>
+                - ${data.userName}: ${data.activity}
+            `;
+            activityLog.appendChild(activityDiv);
+        });
+    } catch (error) {
+        console.error("Error updating UI:", error);
+    }
+}
+```
+
+3. Update your HTML to include Firebase and support authentication:
+
+```html name=index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .break-btn { width: 150px; }
+        .status-active { background-color: #d4edda; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Time Tracker</h2>
+        
+        <!-- Login Section -->
+        <div id="loginSection">
+            <div class="row">
+                <div class="col">
+                    <button onclick="signInWithGitHub()" class="btn btn-dark">
+                        <img src="github-mark.png" alt="GitHub" style="width: 20px; margin-right: 10px;">
+                        Sign in with GitHub
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Tracker Section -->
+        <div id="timeTrackerSection" style="display: none;">
+            <div class="row mb-4">
+                <div class="col">
+                    <button id="loginBtn" class="btn btn-success break-btn">Login</button>
+                    <button id="logoutBtn" class="btn btn-danger break-btn">Logout</button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col">
+                    <button id="lunchStartBtn" class="btn btn-warning break-btn">Lunch Break Start</button>
+                    <button id="lunchEndBtn" class="btn btn-info break-btn">Lunch Break End</button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col">
+                    <button id="shortBreakStartBtn" class="btn btn-warning break-btn">Short Break Start</button>
+                    <button id="shortBreakEndBtn" class="btn btn-info break-btn">Short Break End</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <h4>Today's Activity Log</h4>
+                    <div id="activityLog" class="border p-3" style="max-height: 300px; overflow-y: auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js';
+    </script>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
+```
+
+4. Create Firebase deployment configuration:
+
+```json name=firebase.json
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
+```
+
+To deploy this solution:
+
+1. Install Firebase CLI:
+```bash
+npm install -g firebase-tools
+```
+
+2. Login to Firebase:
+```bash
+firebase login
+```
+
+3. Initialize your project:
+```bash
+firebase init
+```
+Select:
+- Hosting
+- Your Firebase project
+- Use "." as your public directory
+- Configure as a single-page app
+- Don't overwrite index.html
+
+4. Deploy your application:
+```bash
+firebase deploy
+```
+
+Additional setup required:
+
+1. In Firebase Console:
+   - Enable GitHub Authentication
+   - Set up Firestore Database
+   - Add security rules for Firestore
+
+2. In GitHub:
+   - Add your Firebase app as an OAuth app
+   - Get the client ID and secret
+
+3. For Telegram:
+   - Create a bot using BotFather
+   - Get the bot token
+   - Add the bot to your group
+   - Get the chat ID
+
+Security Rules for Firestore:
+```javascript name=firestore.rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /activities/{activity} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+                   request.resource.data.userId == request.auth.uid;
+    }
+  }
+}
+```
+
+This solution provides:
+- Secure authentication using GitHub
+- Real-time data storage with Firestore
+- Automatic Telegram notifications
+- Team member verification
+- Activity logging with timestamps
+- Mobile-responsive interface
+
+Would you like me to explain any part in more detail or help you with the setup of any specific component?
