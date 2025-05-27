@@ -355,15 +355,6 @@ function renderActivities(snapshot) {
 window.signInWithGoogle = signInWithGoogle; // Updated global assignment
 window.logActivity = logActivity;
 
-// Temporary test function for debugging auth
-window.testAuth = () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    signInWithPopup(auth, provider)
-        .then(res => console.log("Success:", res.user.uid))
-        .catch(err => console.error("Auth Error:", err.code, err.message));
-};
-
 // Error capture for unhandled rejections
 window.addEventListener('unhandledrejection', event => {
     console.error("Auth Promise Rejection:", event.reason);
