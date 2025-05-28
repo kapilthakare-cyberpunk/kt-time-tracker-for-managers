@@ -411,16 +411,19 @@ async function updateEmployeeStatusTable() {
         const querySnapshot = await getDocs(activitiesQuery);
         const employeeStatus = {};
 
-        // Initialize all employees
-        Object.values(EMAIL_TO_NAME_MAPPING).forEach(name => {
-            employeeStatus[name] = {
-                status: 'Not Logged In',
-                lastActivity: 'No activity today',
-                totalWorkTime: 0,
-                totalBreakTime: 0,
-                isLoggedIn: false,
-                statusClass: 'text-danger'
-            };
+        // Initialize all employees (excluding managers/admins)
+        Object.entries(EMAIL_TO_NAME_MAPPING).forEach(([email, name]) => {
+            // Skip admin/manager users from employee status tracking
+            if (!ADMIN_EMAILS.includes(email)) {
+                employeeStatus[name] = {
+                    status: 'Not Logged In',
+                    lastActivity: 'No activity today',
+                    totalWorkTime: 0,
+                    totalBreakTime: 0,
+                    isLoggedIn: false,
+                    statusClass: 'text-danger'
+                };
+            }
         });
 
         // Process activities
