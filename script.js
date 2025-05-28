@@ -12,7 +12,7 @@ import { calculateDuration } from './utils/duration.js';
 // Telegram bot configuration
 const TELEGRAM_BOT_TOKEN = '7701499260:AAEUM83mvCEvcXVsxwjX9R6iV03Lv0evUDI';
 const TELEGRAM_PRIVATE_CHAT_ID = '731410004'; // Kapil's private chat
-const TELEGRAM_GROUP_CHAT_ID = '-1002354679877'; // Team group chat ID (add your group ID here)
+const TELEGRAM_GROUP_CHAT_ID = '-1002564210667'; // Team group chat ID (add your group ID here)
 
 // Email to name mapping for team members
 const EMAIL_TO_NAME_MAPPING = {
@@ -23,11 +23,12 @@ const EMAIL_TO_NAME_MAPPING = {
     'shiwani.gade@primesandzooms.com': 'Shiwani Gade',
     'rupaliyawatkar@gmail.com': 'Rupali Yawatkar',
     'diptipawar02003@gmail.com': 'Dipti Pawar',
-    'kapilsthakare@gmail.com': 'Kapil Thakare'
+    'kapilsthakare@gmail.com': 'Kapil Thakare',
+    'kapil.thakare@primesandzooms.com': 'Kapil Thakare'
 };
 
 // Admin users who can see all activities
-const ADMIN_EMAILS = ['kapilsthakare@gmail.com'];
+const ADMIN_EMAILS = ['kapilsthakare@gmail.com', 'kapil.thakare@primesandzooms.com'];
 
 // Authentication state observer
 auth.onAuthStateChanged((user) => {
@@ -296,6 +297,11 @@ async function updateUI() {
         const querySnapshot = await getDocs(activitiesQuery);
         console.log(`Found ${querySnapshot.docs.length} activities`);
         renderActivities(querySnapshot, isAdmin);
+        
+        // Update employee status table (only for admin users)
+        if (isAdmin) {
+            await updateEmployeeStatusTable();
+        }
     } catch (error) {
         console.error("Error updating UI:", error);
         // Show error in the activity log
@@ -384,6 +390,131 @@ function renderActivities(snapshot, isAdmin = false) {
         noActivityDiv.textContent = 'No activities logged today.';
         activityLog.appendChild(noActivityDiv);
     }
+}
+
+// Update Employee Status Table (Admin only)
+async function updateEmployeeStatusTable() {
+    const statusTable = document.getElementById('statusTable');
+    if (!statusTable) return;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    try {
+        // Get all activities for today
+        const activitiesQuery = query(
+            collection(db, "activities"),
+            where("startTime", ">=", Timestamp.fromDate(startOfDay)),
+            orderBy("startTime", "desc")
+        );
+
+        const querySnapshot = await getDocs(activitiesQuery);
+        const employeeStatus = {};
+
+        // Initialize all employees
+        Object.values(EMAIL_TO_NAME_MAPPING).forEach(name => {
+            employeeStatus[name] = {
+                status: 'Not Logged In',
+                lastActivity: 'No activity today',
+                totalWorkTime: 0,
+                totalBreakTime: 0,
+                isLoggedIn: false,
+                statusClass: 'text-danger'
+            };
+        });
+
+        // Process activities
+        querySnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const activity = {
+                ...data,
+                startTime: data.startTime.toDate(),
+                endTime: data.endTime ? data.endTime.toDate() : null
+            };
+
+            const userName = activity.userName;
+            if (!employeeStatus[userName]) return;
+
+            const lastActivityTime = activity.startTime.toLocaleTimeString();
+
+            // Determine current status based on most recent activity
+            if (!activity.endTime) {
+                // Activity is in progress
+                if (activity.activityType === 'login') {
+                    employeeStatus[userName].status = 'Working';
+                    employeeStatus[userName].isLoggedIn = true;
+                    employeeStatus[userName].statusClass = 'text-success';
+                } else if (activity.activityType === 'lunch') {
+                    employeeStatus[userName].status = 'On Lunch Break';
+                    employeeStatus[userName].statusClass = 'text-warning';
+                } else if (activity.activityType === 'break') {
+                    employeeStatus[userName].status = 'On Short Break';
+                    employeeStatus[userName].statusClass = 'text-info';
+                }
+                employeeStatus[userName].lastActivity = `${activity.activityType} started at ${lastActivityTime}`;
+            } else {
+                // Completed activity
+                employeeStatus[userName].lastActivity = `${activity.activityType} ended at ${activity.endTime.toLocaleTimeString()}`;
+                
+                // Calculate durations
+                if (activity.duration) {
+                    const durationMs = calculateDurationInMs(activity.startTime, activity.endTime);
+                    if (activity.activityType === 'login') {
+                        employeeStatus[userName].totalWorkTime += durationMs;
+                    } else if (activity.activityType === 'lunch' || activity.activityType === 'break') {
+                        employeeStatus[userName].totalBreakTime += durationMs;
+                    }
+                }
+
+                // If this is the most recent completed activity, update status
+                if (activity.activityType === 'login') {
+                    employeeStatus[userName].status = 'Logged Out';
+                    employeeStatus[userName].statusClass = 'text-secondary';
+                }
+            }
+        });
+
+        // Render the table
+        statusTable.innerHTML = '';
+        Object.entries(employeeStatus).forEach(([name, status]) => {
+            const row = document.createElement('tr');
+            row.className = status.isLoggedIn ? 'table-success' : '';
+            
+            const workTimeStr = formatDuration(status.totalWorkTime);
+            const breakTimeStr = formatDuration(status.totalBreakTime);
+            
+            row.innerHTML = `
+                <td><strong>${name}</strong></td>
+                <td><span class="${status.statusClass}">${status.status}</span></td>
+                <td>${status.lastActivity}</td>
+                <td><small>Work: ${workTimeStr}<br>Break: ${breakTimeStr}</small></td>
+            `;
+            
+            statusTable.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Error updating employee status table:", error);
+        statusTable.innerHTML = '<tr><td colspan="4" class="text-danger text-center">Error loading employee status</td></tr>';
+    }
+}
+
+// Helper function to calculate duration in milliseconds
+function calculateDurationInMs(startTime, endTime) {
+    return endTime.getTime() - startTime.getTime();
+}
+
+// Helper function to format duration from milliseconds
+function formatDuration(durationMs) {
+    if (durationMs === 0) return '0m';
+    
+    const hours = Math.floor(durationMs / (1000 * 60 * 60));
+    const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
 }
 
 // Make functions globally available for HTML event handlers
