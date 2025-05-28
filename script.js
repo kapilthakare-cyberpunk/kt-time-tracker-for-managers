@@ -11,15 +11,23 @@ import { calculateDuration } from './utils/duration.js';
 
 // Telegram bot configuration
 const TELEGRAM_BOT_TOKEN = '7701499260:AAEUM83mvCEvcXVsxwjX9R6iV03Lv0evUDI';
-const TELEGRAM_CHAT_ID = '731410004';
+const TELEGRAM_PRIVATE_CHAT_ID = '731410004'; // Kapil's private chat
+const TELEGRAM_GROUP_CHAT_ID = '-1002354679877'; // Team group chat ID (add your group ID here)
 
-// Team configuration
-const TEAM_CONFIG = {
-    "Sales Team": ["Samiir Shaikh", "Prakash Prasad", "Sujata Virkar"],
-    "Registration Team": ["Shiwani Gade", "Rupali Yawatkar"],
-    "Trainee Sales": ["Dipti Pawar"],
-    "Manager": ["Kapil Thakare"]
+// Email to name mapping for team members
+const EMAIL_TO_NAME_MAPPING = {
+    'samiirshaiikh24@gmail.com': 'Samiir Shaikh',
+    'omprakashprasad8087@gmail.com': 'Prakash Prasad', 
+    'sujata9293.vv@gmail.com': 'Sujata Virkar',
+    'shiwanigade31@gmail.com': 'Shiwani Gade',
+    'shiwani.gade@primesandzooms.com': 'Shiwani Gade',
+    'rupaliyawatkar@gmail.com': 'Rupali Yawatkar',
+    'diptipawar02003@gmail.com': 'Dipti Pawar',
+    'kapilsthakare@gmail.com': 'Kapil Thakare'
 };
+
+// Admin users who can see all activities
+const ADMIN_EMAILS = ['kapilsthakare@gmail.com'];
 
 // Authentication state observer
 auth.onAuthStateChanged((user) => {
@@ -56,25 +64,26 @@ function updateAuthUI(user) {
 }
 
 // Google Authentication
-async function signInWithGoogle() { // Renamed function
-    const provider = new GoogleAuthProvider(); // Changed provider
-    provider.setCustomParameters({ prompt: 'select_account' }); // Forces account selection
+async function signInWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
-        // Check if user is part of the team
-        const isTeamMember = Object.values(TEAM_CONFIG)
-            .flat()
-            .includes(user.displayName);
         
-        if (!isTeamMember) {
+        // Check if user email is in our team mapping
+        const userDisplayName = EMAIL_TO_NAME_MAPPING[user.email];
+        
+        if (!userDisplayName) {
             await auth.signOut();
-            alert('Access denied. Only team members can log in.');
+            alert(`Access denied. Only team members can log in. Your email: ${user.email}`);
             return;
         }
+        
+        console.log(`Welcome ${userDisplayName} (${user.email})`);
     } catch (error) {
-        console.error("Error during Google sign-in:", error); // Updated error message
-        alert('Failed to sign in with Google'); // Updated alert
+        console.error("Error during Google sign-in:", error);
+        alert('Failed to sign in with Google');
     }
 }
 
@@ -119,17 +128,18 @@ async function logActivity(activityType, isStart = true) {
         
         if (isStart) {
             // Create start activity
+            const userName = EMAIL_TO_NAME_MAPPING[user.email] || user.displayName;
             const activityDoc = {
                 startTime: Timestamp.fromDate(now),
                 activityType: activityType,
                 userId: user.uid,
-                userName: user.displayName
+                userName: userName
             };
 
             await addDoc(collection(db, "activities"), activityDoc);
             
             // Send Telegram notification for start
-            const message = `🔔 <b>Activity Started</b>\n👤 ${user.displayName}\n📝 ${activityType.charAt(0).toUpperCase() + activityType.slice(1)}\n⏰ ${now.toLocaleString()}`;
+            const message = `🔔 <b>Activity Started</b>\n👤 ${userName}\n📝 ${activityType.charAt(0).toUpperCase() + activityType.slice(1)}\n⏰ ${now.toLocaleString()}`;
             await sendTelegramNotification(message);
         } else {
             // Find matching start activity and complete it
@@ -184,7 +194,8 @@ async function logActivity(activityType, isStart = true) {
                     console.log(`Updated activity ${startDoc.id} with endTime and duration`);
                     
                     // Send Telegram notification for completion
-                    const message = `✅ <b>Activity Completed</b>\n👤 ${user.displayName}\n📝 ${activityType.charAt(0).toUpperCase() + activityType.slice(1)}\n⏰ <b>Duration:</b> ${duration}\n🕐 ${startTime.toLocaleString()} → ${endTime.toLocaleString()}`;
+                    const userName = EMAIL_TO_NAME_MAPPING[user.email] || user.displayName;
+                    const message = `✅ <b>Activity Completed</b>\n👤 ${userName}\n📝 ${activityType.charAt(0).toUpperCase() + activityType.slice(1)}\n⏰ <b>Duration:</b> ${duration}\n🕐 ${startTime.toLocaleString()} → ${endTime.toLocaleString()}`;
                     await sendTelegramNotification(message);
                 } else {
                     console.error(`No active ${activityType} found to end`);
@@ -216,38 +227,42 @@ async function logSimpleActivity(activity) {
     return logActivity(activity, true);
 }
 
-// Send Telegram notification
+// Send Telegram notification to both private and group chats
 async function sendTelegramNotification(message) {
-    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    if (!TELEGRAM_BOT_TOKEN) {
         console.warn('Telegram bot not configured');
         return;
     }
     
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'HTML'
-            })
-        });
-        
-        if (response.ok) {
-            console.log('Telegram notification sent successfully');
-        } else {
-            console.error('Failed to send Telegram notification:', response.status);
+    const chatIds = [TELEGRAM_PRIVATE_CHAT_ID, TELEGRAM_GROUP_CHAT_ID].filter(id => id);
+    
+    for (const chatId of chatIds) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            });
+            
+            if (response.ok) {
+                console.log(`Telegram notification sent successfully to ${chatId}`);
+            } else {
+                console.error(`Failed to send Telegram notification to ${chatId}:`, response.status);
+            }
+        } catch (error) {
+            console.error(`Error sending Telegram notification to ${chatId}:`, error);
         }
-    } catch (error) {
-        console.error("Error sending Telegram notification:", error);
     }
 }
 
-// Update UI with today's activities
+// Update UI with today's activities (with privacy controls)
 async function updateUI() {
     const user = auth.currentUser;
     if (!user) return;
@@ -255,18 +270,32 @@ async function updateUI() {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    // Show all team activities for today (not just current user)
-    const activitiesQuery = query(
-        collection(db, "activities"),
-        where("startTime", ">=", Timestamp.fromDate(startOfDay)),
-        orderBy("startTime", "desc")
-    );
+    // Check if user is admin
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+    
+    let activitiesQuery;
+    if (isAdmin) {
+        // Admin can see all team activities for today
+        activitiesQuery = query(
+            collection(db, "activities"),
+            where("startTime", ">=", Timestamp.fromDate(startOfDay)),
+            orderBy("startTime", "desc")
+        );
+    } else {
+        // Regular users can only see their own activities
+        activitiesQuery = query(
+            collection(db, "activities"),
+            where("userId", "==", user.uid),
+            where("startTime", ">=", Timestamp.fromDate(startOfDay)),
+            orderBy("startTime", "desc")
+        );
+    }
 
     try {
         console.log('Fetching activities for today...');
         const querySnapshot = await getDocs(activitiesQuery);
         console.log(`Found ${querySnapshot.docs.length} activities`);
-        renderActivities(querySnapshot);
+        renderActivities(querySnapshot, isAdmin);
     } catch (error) {
         console.error("Error updating UI:", error);
         // Show error in the activity log
@@ -277,12 +306,15 @@ async function updateUI() {
     }
 }
 
-// Enhanced activity rendering function
-function renderActivities(snapshot) {
+// Enhanced activity rendering function with privacy controls
+function renderActivities(snapshot, isAdmin = false) {
     const activityLog = document.getElementById('activityLog');
     if (!activityLog) return;
     
-    activityLog.innerHTML = '';
+    // Add header to show what data is being displayed
+    const headerText = isAdmin ? "All Team Activities (Admin View)" : "Your Activities";
+    
+    activityLog.innerHTML = `<h6 class="mb-3 text-muted"><i class="fas fa-eye"></i> ${headerText}</h6>`;
     
     const activities = [];
     const pendingStarts = {};
@@ -347,7 +379,10 @@ function renderActivities(snapshot) {
 
     // Show message if no activities
     if (activities.length === 0) {
-        activityLog.innerHTML = '<p class="text-muted text-center">No activities logged today.</p>';
+        const noActivityDiv = document.createElement('p');
+        noActivityDiv.className = 'text-muted text-center mt-3';
+        noActivityDiv.textContent = 'No activities logged today.';
+        activityLog.appendChild(noActivityDiv);
     }
 }
 
