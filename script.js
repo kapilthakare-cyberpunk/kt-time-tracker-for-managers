@@ -11,8 +11,8 @@ import { calculateDuration } from './utils/duration.js';
 
 // Telegram bot configuration
 const TELEGRAM_BOT_TOKEN = '7701499260:AAEUM83mvCEvcXVsxwjX9R6iV03Lv0evUDI';
-const TELEGRAM_PRIVATE_CHAT_ID = '731410004'; // Kapil's private chat
-const TELEGRAM_GROUP_CHAT_ID = '-1002564210667'; // Team group chat ID (add your group ID here)
+const TELEGRAM_CHANNEL_ID = '519802372'; // Your new channel ID
+
 
 // Email to name mapping for team members
 const EMAIL_TO_NAME_MAPPING = {
@@ -236,9 +236,10 @@ async function sendTelegramNotification(message) {
     }
     
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const chatIds = [TELEGRAM_PRIVATE_CHAT_ID, TELEGRAM_GROUP_CHAT_ID].filter(id => id);
-    
-    for (const chatId of chatIds) {
+    // Send only to the new channel ID
+    const chatId = TELEGRAM_CHANNEL_ID;
+
+    if (chatId) {
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -253,13 +254,15 @@ async function sendTelegramNotification(message) {
             });
             
             if (response.ok) {
-                console.log(`Telegram notification sent successfully to ${chatId}`);
+                console.log(`Telegram notification sent successfully to channel ${chatId}`);
             } else {
-                console.error(`Failed to send Telegram notification to ${chatId}:`, response.status);
+                console.error(`Failed to send Telegram notification to channel ${chatId}:`, response.status);
             }
         } catch (error) {
-            console.error(`Error sending Telegram notification to ${chatId}:`, error);
+            console.error(`Error sending Telegram notification to channel ${chatId}:`, error);
         }
+    } else {
+        console.warn('Telegram channel ID not configured.');
     }
 }
 
