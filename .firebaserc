@@ -1,15 +1,5 @@
 {
   "projects": {
-    "default": "teamtimetracker-740e6"
-  },
-  "targets": {
-    "teamtimetracker-740e6": {
-      "hosting": {
-        "main": [
-          "teamtimetracker-740e6"
-        ]
-      }
-    }
-  },
-  "etags": {}
+    "default": "kt-time-tracker"
+  }
 }

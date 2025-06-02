@@ -5,13 +5,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import {
     signInWithPopup, signOut,
-    GoogleAuthProvider // Changed from GithubAuthProvider
+    GoogleAuthProvider, RecaptchaVerifier // Changed from GithubAuthProvider
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 import { calculateDuration } from './utils/duration.js';
 
 // Telegram bot configuration
 const TELEGRAM_BOT_TOKEN = '7701499260:AAEUM83mvCEvcXVsxwjX9R6iV03Lv0evUDI';
-const TELEGRAM_CHANNEL_ID = '519802372'; // Your new channel ID
+const TELEGRAM_CHANNEL_ID = '-1002679175910'; // Team Daily: Sales & Reg channel
 
 
 // Email to name mapping for team members
@@ -30,39 +30,60 @@ const EMAIL_TO_NAME_MAPPING = {
 // Admin users who can see all activities
 const ADMIN_EMAILS = ['kapilsthakare@gmail.com', 'kapil.thakare@primesandzooms.com'];
 
+// Unified authentication UI update function
+function updateAuthUI(user) {
+    // If no Firebase user, check for temp user
+    if (!user) {
+        const tempUserData = sessionStorage.getItem('tempUser');
+        if (tempUserData) {
+            user = JSON.parse(tempUserData);
+        }
+    }
+    const loginSection = document.getElementById('loginSection');
+    const timeTrackerSection = document.getElementById('timeTrackerSection');
+    if (!loginSection || !timeTrackerSection) {
+        console.error('Required DOM elements not found');
+        return;
+    }
+    // Remove any existing temp user indicator
+    const existingIndicator = document.getElementById('tempUserIndicator');
+    if (existingIndicator) existingIndicator.remove();
+    if (user) {
+        loginSection.style.display = 'none';
+        timeTrackerSection.style.display = 'block';
+        // If temp user, show indicator
+        if (user.isTemporary) {
+            const tempIndicator = document.createElement('div');
+            tempIndicator.id = 'tempUserIndicator';
+            tempIndicator.className = 'alert alert-info d-flex align-items-center mt-2 mb-3';
+            tempIndicator.innerHTML = `
+                <i class="fas fa-user-clock me-2"></i>
+                <div>
+                    <strong>Quick Access Mode</strong><br>
+                    <small>Temporary session for ${user.displayName}. Data stored locally.</small>
+                </div>
+                <button onclick="endTempSession()" class="btn btn-sm btn-outline-danger ms-auto">
+                    <i class="fas fa-sign-out-alt"></i> End Session
+                </button>
+            `;
+            timeTrackerSection.insertBefore(tempIndicator, timeTrackerSection.firstChild);
+        }
+        updateUI();
+    } else {
+        loginSection.style.display = 'block';
+        timeTrackerSection.style.display = 'none';
+    }
+}
+
 // Authentication state observer
+// Only call updateAuthUI, do not redefine it
 auth.onAuthStateChanged((user) => {
-    console.log("Auth State:", user ? user.email : "No user");
-    
-    // Wait for DOM to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => updateAuthUI(user));
     } else {
         updateAuthUI(user);
     }
 });
-
-// Update authentication UI
-function updateAuthUI(user) {
-    const loginSection = document.getElementById('loginSection');
-    const timeTrackerSection = document.getElementById('timeTrackerSection');
-    
-    if (!loginSection || !timeTrackerSection) {
-        console.error('Required DOM elements not found');
-        return;
-    }
-    
-    if (user) {
-        // User is signed in
-        loginSection.style.display = 'none';
-        timeTrackerSection.style.display = 'block';
-        updateUI(); // Load user's activities
-    } else {
-        // User is signed out
-        loginSection.style.display = 'block';
-        timeTrackerSection.style.display = 'none';
-    }
-}
 
 // Google Authentication
 async function signInWithGoogle() {
@@ -119,7 +140,7 @@ window.logout = logout;
 // Log activity to Firestore with enhanced duration tracking
 async function logActivity(activityType, isStart = true) {
     try {
-        const user = auth.currentUser;
+        const user = getCurrentUser(); // Use enhanced function to get current user
         if (!user) {
             alert('Please sign in first');
             return;
@@ -129,7 +150,7 @@ async function logActivity(activityType, isStart = true) {
         
         if (isStart) {
             // Create start activity
-            const userName = EMAIL_TO_NAME_MAPPING[user.email] || user.displayName;
+            const userName = user.isTemporary ? user.displayName : (EMAIL_TO_NAME_MAPPING[user.email] || user.displayName);
             const activityDoc = {
                 startTime: Timestamp.fromDate(now),
                 activityType: activityType,
@@ -137,21 +158,72 @@ async function logActivity(activityType, isStart = true) {
                 userName: userName
             };
 
-            await addDoc(collection(db, "activities"), activityDoc);
+            // Only save to Firestore for authenticated users
+            if (!user.isTemporary) {
+                await addDoc(collection(db, "activities"), activityDoc);
+            } else {
+                // For temporary users, store in sessionStorage
+                const tempActivities = JSON.parse(sessionStorage.getItem('tempActivities') || '[]');
+                tempActivities.push({
+                    ...activityDoc,
+                    id: `temp_${Date.now()}`,
+                    startTime: now // Store as Date object for temp activities
+                });
+                sessionStorage.setItem('tempActivities', JSON.stringify(tempActivities));
+            }
             
             // Send Telegram notification for start
             const message = `🔔 <b>Activity Started</b>\n👤 ${userName}\n📝 ${activityType.charAt(0).toUpperCase() + activityType.slice(1)}\n⏰ ${now.toLocaleString()}`;
             await sendTelegramNotification(message);
         } else {
             // Find matching start activity and complete it
-            // Simple query to get user's activities of this type
-            const activitiesQuery = query(
-                collection(db, "activities"),
-                where("userId", "==", user.uid),
-                where("activityType", "==", activityType)
-            );
+            if (user.isTemporary) {
+                // Handle temporary user activities
+                const tempActivities = JSON.parse(sessionStorage.getItem('tempActivities') || '[]');
+                const userName = user.displayName;
+                
+                // Find the most recent uncompleted activity of this type
+                let startActivityIndex = -1;
+                let startActivity = null;
+                
+                for (let i = tempActivities.length - 1; i >= 0; i--) {
+                    const activity = tempActivities[i];
+                    if (activity.activityType === activityType && activity.userId === user.uid && !activity.endTime) {
+                        startActivityIndex = i;
+                        startActivity = activity;
+                        break;
+                    }
+                }
+                
+                if (startActivity) {
+                    const startTime = new Date(startActivity.startTime);
+                    const endTime = now;
+                    const duration = calculateDuration(startTime, endTime);
+                    
+                    // Update the activity
+                    tempActivities[startActivityIndex] = {
+                        ...startActivity,
+                        endTime: endTime,
+                        duration: duration
+                    };
+                    
+                    sessionStorage.setItem('tempActivities', JSON.stringify(tempActivities));
+                    
+                    // Send Telegram notification for completion
+                    const message = `✅ <b>Activity Completed</b>\n👤 ${userName}\n📝 ${activityType.charAt(0).toUpperCase() + activityType.slice(1)}\n⏰ <b>Duration:</b> ${duration}\n🕐 ${startTime.toLocaleString()} → ${endTime.toLocaleString()}`;
+                    await sendTelegramNotification(message);
+                } else {
+                    throw new Error(`No active ${activityType} found to end. Please start a ${activityType} first.`);
+                }
+            } else {
+                // Handle authenticated user activities (existing Firestore logic)
+                const activitiesQuery = query(
+                    collection(db, "activities"),
+                    where("userId", "==", user.uid),
+                    where("activityType", "==", activityType)
+                );
 
-            const snapshot = await getDocs(activitiesQuery);
+                const snapshot = await getDocs(activitiesQuery);
             
             console.log(`Found ${snapshot.docs.length} ${activityType} activities for user`);
             
@@ -197,7 +269,7 @@ async function logActivity(activityType, isStart = true) {
                     // Send Telegram notification for completion
                     const userName = EMAIL_TO_NAME_MAPPING[user.email] || user.displayName;
                     const message = `✅ <b>Activity Completed</b>\n👤 ${userName}\n📝 ${activityType.charAt(0).toUpperCase() + activityType.slice(1)}\n⏰ <b>Duration:</b> ${duration}\n🕐 ${startTime.toLocaleString()} → ${endTime.toLocaleString()}`;
-                    await sendTelegramNotification(message);
+                                        await sendTelegramNotification(message);
                 } else {
                     console.error(`No active ${activityType} found to end`);
                     throw new Error(`No active ${activityType} found to end. Please start a ${activityType} first.`);
@@ -205,6 +277,7 @@ async function logActivity(activityType, isStart = true) {
             } else {
                 console.error(`No ${activityType} activities found for this user`);
                 throw new Error(`No ${activityType} activities found. Please start a ${activityType} first.`);
+            }
             }
         }
 
@@ -268,11 +341,38 @@ async function sendTelegramNotification(message) {
 
 // Update UI with today's activities (with privacy controls)
 async function updateUI() {
-    const user = auth.currentUser;
+    const user = getCurrentUser(); // Use enhanced function to get current user
     if (!user) return;
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
+
+    if (user.isTemporary) {
+        // Handle temporary user - load from sessionStorage
+        const tempActivities = JSON.parse(sessionStorage.getItem('tempActivities') || '[]');
+        
+        // Filter activities for today
+        const todayActivities = tempActivities.filter(activity => {
+            const activityDate = new Date(activity.startTime);
+            return activityDate >= startOfDay && activity.userId === user.uid;
+        });
+        
+        // Create a mock snapshot-like object for renderActivities
+        const mockSnapshot = {
+            docs: todayActivities.map(activity => ({
+                id: activity.id,
+                data: () => ({
+                    ...activity,
+                    startTime: { toDate: () => new Date(activity.startTime) },
+                    endTime: activity.endTime ? { toDate: () => new Date(activity.endTime) } : null
+                })
+            }))
+        };
+        
+        console.log(`Found ${todayActivities.length} temporary activities`);
+        renderActivities(mockSnapshot, false);
+        return;
+    }
 
     // Check if user is admin
     const isAdmin = ADMIN_EMAILS.includes(user.email);
@@ -560,3 +660,131 @@ document.addEventListener('DOMContentLoaded', () => {
     const shortBreakEndBtn = document.getElementById('shortBreakEndBtn');
     if (shortBreakEndBtn) shortBreakEndBtn.addEventListener('click', () => logActivity('break', false));
 });
+
+// Phone Authentication for quick access
+const TEMP_ACCESS_PASSCODE = '123456'; // 6-digit passcode for temporary access
+const TEMP_ACCESS_PHONE_NUMBERS = [
+    '+919503275757', // Add valid phone numbers here
+    '9503275757',
+    '919503275757',
+    '+91 9503275757'
+];
+
+// Initialize invisible reCAPTCHA for phone login
+function setupRecaptcha() {
+    if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier('phoneLoginBtn', {
+            'size': 'invisible',
+            'callback': (response) => {
+                // reCAPTCHA solved, allow signInWithPhone
+                doPhoneLogin();
+            }
+        }, auth);
+        window.recaptchaVerifier.render();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', setupRecaptcha);
+
+// Refactor signInWithPhone to use reCAPTCHA
+async function signInWithPhone() {
+    if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.verify().then(() => {
+            // doPhoneLogin will be called by the callback
+        });
+    } else {
+        // Fallback if reCAPTCHA not ready
+        doPhoneLogin();
+    }
+}
+
+function doPhoneLogin() {
+    const phoneNumber = document.getElementById('phoneNumber').value.trim();
+    const passcode = document.getElementById('passcode').value.trim();
+    
+    // Validate inputs
+    if (!phoneNumber) {
+        alert('Please enter a phone number');
+        return;
+    }
+    
+    if (!passcode) {
+        alert('Please enter the 6-digit passcode');
+        return;
+    }
+    
+    if (passcode.length !== 6 || !/^\d{6}$/.test(passcode)) {
+        alert('Passcode must be exactly 6 digits');
+        return;
+    }
+    
+    // Check if passcode is correct
+    if (passcode !== TEMP_ACCESS_PASSCODE) {
+        alert('Invalid passcode. Please try again.');
+        return;
+    }
+    
+    // Normalize phone number for comparison
+    const normalizedPhone = phoneNumber.replace(/\D/g, ''); // Remove non-digits
+    const isValidPhone = TEMP_ACCESS_PHONE_NUMBERS.some(validNumber => {
+        const normalizedValid = validNumber.replace(/\D/g, '');
+        return normalizedValid === normalizedPhone || 
+               normalizedValid.endsWith(normalizedPhone) || 
+               normalizedPhone.endsWith(normalizedValid);
+    });
+    
+    if (!isValidPhone) {
+        alert('Phone number not authorized for quick access');
+        return;
+    }
+    
+    // Create a temporary user session
+    const tempUser = {
+        uid: `temp_${normalizedPhone}`,
+        email: `temp_${normalizedPhone}@phone.access`,
+        displayName: `Quick Access User (${phoneNumber})`,
+        phoneNumber: phoneNumber,
+        isTemporary: true
+    };
+    
+    // Store temp user in sessionStorage
+    sessionStorage.setItem('tempUser', JSON.stringify(tempUser));
+    // Update UI for temp user
+    updateAuthUI(tempUser);
+    
+    console.log(`Quick access granted for phone: ${phoneNumber}`);
+    alert(`Welcome! Quick access granted for ${phoneNumber}`);
+}
+
+// Function to end temporary session
+function endTempSession() {
+    sessionStorage.removeItem('tempUser');
+    updateAuthUI(null);
+    
+    // Clear form
+    const phoneInput = document.getElementById('phoneNumber');
+    const passcodeInput = document.getElementById('passcode');
+    if (phoneInput) phoneInput.value = '';
+    if (passcodeInput) passcodeInput.value = '';
+    
+    alert('Quick access session ended');
+}
+
+// Enhanced getCurrentUser function to handle temp users
+function getCurrentUser() {
+    // First check Firebase auth
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser) return firebaseUser;
+    
+    // Then check for temp user
+    const tempUserData = sessionStorage.getItem('tempUser');
+    if (tempUserData) {
+        return JSON.parse(tempUserData);
+    }
+    
+    return null;
+}
+
+// Make functions globally available
+window.signInWithPhone = signInWithPhone;
+window.endTempSession = endTempSession;
