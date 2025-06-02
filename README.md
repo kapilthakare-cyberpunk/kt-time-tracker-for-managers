@@ -1,8 +1,33 @@
-# Enhanced Firebase Time Tracker
+# Team Time Tracker for Managers
 
-A comprehensive time tracking application with Firebase Firestore integration, featuring duration calculation, paired start/end activities, and enhanced data validation.
+## 🚀 **LIVE DEPLOYMENT STATUS**
 
-## Features
+### ✅ **Successfully Deployed** 
+- **Live URL**: [https://kt-time-tracker.web.app](https://kt-time-tracker.web.app)
+- **GitHub Repository**: [https://github.com/kapilthakare-cyberpunk/kt-time-tracker-for-managers](https://github.com/kapilthakare-cyberpunk/kt-time-tracker-for-managers)
+- **Firebase Project**: `kt-time-tracker`
+- **Deployment Date**: June 2, 2025
+
+### 🔧 **Current Configuration**
+- **Phone Authentication**: Ready with 6-digit passcode system (`123456`)
+- **Authorized Phone**: `+919503275757` 
+- **Telegram Integration**: Channel ID `-1002679175910` (Team Daily: Sales & Reg)
+- **reCAPTCHA**: Invisible reCAPTCHA integrated for security
+- **Firebase Hosting**: Fully deployed and operational
+
+### ⚠️ **Manual Setup Required**
+To complete the authentication setup, enable these in [Firebase Console](https://console.firebase.google.com/project/kt-time-tracker):
+
+1. **Enable Authentication Providers**:
+   - Go to Authentication > Sign-in method
+   - Enable **Google** provider
+   - Enable **Phone** provider
+
+2. **Setup Firestore Security Rules**:
+   - Go to Firestore Database > Rules
+   - Copy rules from `firestore.rules` file in this repository
+
+## 📱 **Features**
 
 ### ✨ Enhanced Data Structure
 - **startTime**: Required timestamp for all activities
