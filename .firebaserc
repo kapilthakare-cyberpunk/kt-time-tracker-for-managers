@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "kt-time-tracker"
-  }
+    "default": "kt-time-tracker",
+    "production": "kt-time-tracker"
+  },
+  "targets": {},
+  "etags": {}
 }

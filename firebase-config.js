@@ -5,13 +5,12 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC2oXM977OYHvFCzXlDrKVcAPZOiMSKtEc",
-  authDomain: "teamtimetracker-740e6.firebaseapp.com",
-  projectId: "teamtimetracker-740e6",
-  storageBucket: "teamtimetracker-740e6.firebasestorage.app",
-  messagingSenderId: "646701134730",
-  appId: "1:646701134730:web:d8dc2ee4e25cf2bf6bce73",
-  measurementId: "G-PN81N1881Q"
+  apiKey: "AIzaSyDPpC--_h9qr_fCHkMDVB_UrpiVE0-gOY8",
+  authDomain: "kt-time-tracker.firebaseapp.com",
+  projectId: "kt-time-tracker",
+  storageBucket: "kt-time-tracker.firebasestorage.app",
+  messagingSenderId: "132454526188",
+  appId: "1:132454526188:web:52363a18795fdc433089c9"
 };
 
 // Initialize Firebase
