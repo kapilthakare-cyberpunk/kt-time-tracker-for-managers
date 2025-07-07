@@ -4,12 +4,13 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "site": "kt-time-tracker",
     "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "time_tracker_env/**",
+      "tests/**"
     ],
     "rewrites": [
       {
