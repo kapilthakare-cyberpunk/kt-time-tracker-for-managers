@@ -1,17 +1,49 @@
 {
   "name": "time-tracker",
-  "version": "1.0.0",
-  "description": "Firebase Time Tracker Application",
+  "version": "2.0.0",
+  "description": "Optimized Firebase Time Tracker Application with Performance Enhancements",
   "type": "module",
   "main": "index.html",
   "scripts": {
     "start": "python3 -m http.server 8000",
     "serve": "python3 -m http.server 5500",
+    "dev": "python3 -m http.server 8000 --bind localhost",
+    "build": "npm run optimize:css && npm run minify:js",
+    "optimize:css": "echo 'CSS optimization can be added with postcss/cssnano'",
+    "minify:js": "echo 'JS minification can be added with terser/rollup'",
+    "test": "npm run test:duration && npm run test:activities",
     "test:duration": "node -e 'import(\"./utils/duration.js\").then(m=>console.log(m.calculateDuration(new Date(2025,0,1,10,0), new Date(2025,0,1,10,30))))'",
     "test:rules": "firebase emulators:exec --only firestore \"npm run test:rules\"",
-    "test:activities": "jest tests/activityLog.test.js"
+    "test:activities": "jest tests/activityLog.test.js",
+    "test:performance": "node -e 'console.log(\"Open browser console and run: testPerformance()\")'",
+    "analyze:bundle": "echo 'Bundle analysis - check browser dev tools Network tab'",
+    "lighthouse": "echo 'Run: lighthouse http://localhost:8000 --view'",
+    "benchmark": "echo 'Performance benchmarking - use performance-test.js in browser'"
   },
   "dependencies": {
     "firebase": "^11.8.1"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "keywords": [
+    "time-tracker",
+    "firebase",
+    "performance",
+    "optimization",
+    "pwa",
+    "modular"
+  ],
+  "performance": {
+    "budgets": {
+      "initial": "250KB",
+      "maximum": "500KB"
+    },
+    "targets": {
+      "fcp": "< 1.8s",
+      "lcp": "< 2.5s",
+      "cls": "< 0.1",
+      "fid": "< 100ms"
+    }
   }
 }
