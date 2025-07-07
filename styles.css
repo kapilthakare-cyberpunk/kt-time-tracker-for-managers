@@ -1,0 +1,253 @@
+/* Time Tracker Styles - Optimized for Performance */
+
+/* CSS Variables for better maintainability and performance */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(45deg, #28a745, #20c997);
+    --danger-gradient: linear-gradient(45deg, #dc3545, #fd7e14);
+    --warning-gradient: linear-gradient(45deg, #ffc107, #fd7e14);
+    --info-gradient: linear-gradient(45deg, #17a2b8, #6f42c1);
+    --google-gradient: linear-gradient(45deg, #4285f4, #34a853);
+    
+    --main-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    --button-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --button-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+    
+    --border-radius: 20px;
+    --button-radius: 12px;
+    --card-radius: 15px;
+    
+    --transition: all 0.3s ease;
+    --font-stack: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Base styles */
+body {
+    background: var(--primary-gradient);
+    background-attachment: fixed;
+    min-height: 100vh;
+    font-family: var(--font-stack);
+    margin: 0;
+    padding: 0;
+}
+
+/* Main container with optimized backdrop-filter */
+.main-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    box-shadow: var(--main-shadow);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 20px auto;
+    padding: 30px;
+    max-width: 1200px;
+}
+
+/* Header styles */
+.header-title {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.2rem;
+    line-height: 1.2;
+}
+
+.subtitle {
+    text-align: center;
+    color: #6c757d;
+    margin-bottom: 30px;
+    font-style: italic;
+}
+
+/* Button optimizations */
+.break-btn {
+    width: 180px;
+    margin: 5px;
+    border-radius: var(--button-radius);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: var(--transition);
+    box-shadow: var(--button-shadow);
+    border: none;
+    cursor: pointer;
+}
+
+.break-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--button-shadow-hover);
+}
+
+/* Button variants */
+.btn-success { background: var(--success-gradient); }
+.btn-danger { background: var(--danger-gradient); }
+.btn-warning { 
+    background: var(--warning-gradient);
+    color: white;
+}
+.btn-info { background: var(--info-gradient); }
+
+/* Status indicators */
+.status-active {
+    background: linear-gradient(45deg, #d4edda, #c3e6cb);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* Activity log optimizations */
+.activity-log {
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: var(--card-radius);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.activity-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-log::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.activity-log::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+/* Table optimizations */
+.table {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 0;
+}
+
+/* Login section */
+.login-section {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.google-btn {
+    background: var(--google-gradient);
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    border-radius: 50px;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.google-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+/* Section cards */
+.section-card {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: var(--card-radius);
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(5px);
+}
+
+/* Activity item styles for better performance */
+.activity-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.activity-item.completed {
+    border-left-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.activity-item.in-progress {
+    border-left-color: #ffc107;
+    background: rgba(255, 193, 7, 0.1);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive optimizations */
+@media (max-width: 768px) {
+    .main-container {
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .header-title {
+        font-size: 1.8rem;
+    }
+    
+    .break-btn {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+/* Print styles */
+@media print {
+    .break-btn,
+    .google-btn,
+    .login-section {
+        display: none;
+    }
+    
+    body {
+        background: white;
+    }
+    
+    .main-container {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
