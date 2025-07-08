@@ -1,6 +1,6 @@
 // Summary Management Module
-import { db, auth } from './config.js';
-import { collection, query, where, getDocs, orderBy, startOf, endOf, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+import { db, auth } from '../firebase-config.js';
+import { collection, query, where, getDocs, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 import { TELEGRAM_CONFIG, getEmployeeChatId, isNotificationEnabled, getMessageTemplate, validateTelegramConfig } from './telegram-config.js';
 
 class SummaryManager {
