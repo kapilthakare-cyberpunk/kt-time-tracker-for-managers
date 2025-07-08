@@ -1,281 +1,278 @@
-# Team Time Tracker for Managers
+# P&Z Bookings and Registration Team Time Tracker
 
-## 🚀 **LIVE DEPLOYMENT STATUS**
+A modern, feature-rich time tracking application for the P&Z Bookings and Registration Team (Surashree/Back Office) with real-time monitoring, summary reports, and Telegram notifications.
 
-### ✅ **Successfully Deployed** 
-- **Live URL**: [https://kt-time-tracker.web.app](https://kt-time-tracker.web.app)
-- **GitHub Repository**: [https://github.com/kapilthakare-cyberpunk/kt-time-tracker-for-managers](https://github.com/kapilthakare-cyberpunk/kt-time-tracker-for-managers)
-- **Firebase Project**: `kt-time-tracker`
-- **Deployment Date**: June 2, 2025
+## 🚀 Features
 
-### 🔧 **Current Configuration**
-- **Phone Authentication**: Ready with 6-digit passcode system (`123456`)
-- **Authorized Phone**: `+919503275757` 
-- **Telegram Integration**: Channel ID `-1002679175910` (Team Daily: Sales & Reg)
-- **reCAPTCHA**: Invisible reCAPTCHA integrated for security
-- **Firebase Hosting**: Fully deployed and operational
+### Core Time Tracking
+- **Automatic Session Management**: Start/stop work sessions with one click
+- **Break Tracking**: Monitor lunch breaks and short breaks separately
+- **Real-time Activity Log**: Live updates of all employee activities
+- **Team Status Dashboard**: View all team members' current status
 
-### ⚠️ **Manual Setup Required**
-To complete the authentication setup, enable these in [Firebase Console](https://console.firebase.google.com/project/kt-time-tracker):
+### 📊 Summary Reports
 
-1. **Enable Authentication Providers**:
-   - Go to Authentication > Sign-in method
-   - Enable **Google** provider
-   - Enable **Phone** provider
+#### Today's Summary Tab
+- **Real-time Employee Status**: See who's present, late, or absent
+- **Work Hours Tracking**: Monitor actual work time vs. break time
+- **Smart Comments**: Automatic detection of:
+  - Late arrivals (after 9:00 AM)
+  - Early departures (before 5:00 PM)
+  - Excessive break time (over 1 hour total)
+  - Excessive lunch time (over 1 hour)
+  - Active sessions (still logged in)
 
-2. **Setup Firestore Security Rules**:
-   - Go to Firestore Database > Rules
-   - Copy rules from `firestore.rules` file in this repository
+#### Past Summary Tab
+- **Date Range Selection**: Choose custom date ranges for historical data
+- **Employee Performance**: Track attendance rates, work hours, and patterns
+- **Statistical Analysis**: Average work hours, late days, absent days
+- **Trend Analysis**: Identify patterns in employee behavior
 
-## 📱 **Features**
+### 📱 Telegram Integration
 
-### ✨ Enhanced Data Structure
-- **startTime**: Required timestamp for all activities
-- **endTime**: Optional timestamp for completed activities
-- **activityType**: Standardized activity types (`login`, `lunch`, `break`)
-- **duration**: Auto-calculated duration in `HH:MM` format
-- **userId**: User reference for security
+#### Automatic Notifications
+- **Logout Summaries**: Daily work summary sent when employee logs out
+- **Late Arrival Alerts**: Instant notification for late arrivals
+- **Early Departure Alerts**: Notifications for early departures
+- **Excessive Break Alerts**: Warnings for extended break times
 
-### 🔒 Security Rules
-- Field validation enforcing required fields
-- User-based access control
-- Duration format validation (HH:MM)
+#### Message Templates
+- Rich HTML formatting with emojis
+- Detailed work statistics
+- Customizable alert thresholds
+- Configurable notification types
 
-### ⏱️ Duration Calculation
-- Precise time tracking between start and end events
-- Automatic duration calculation in `HH:MM` format
-- Input validation and error handling
+## 🛠️ Technical Stack
 
-### 📊 Enhanced UI
-- Visual distinction between completed and in-progress activities
-- Duration badges for completed activities
-- Chronological sorting with latest activities first
-- Real-time activity status updates
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Backend**: Firebase (Firestore, Authentication, Hosting)
+- **Styling**: Bootstrap 5, Custom CSS with Glassmorphism
+- **Notifications**: Telegram Bot API
+- **Performance**: Optimized loading, caching, and real-time updates
 
-## Project Structure
+## 📋 Prerequisites
 
-```
-time-tracker/
-├── utils/
-│   └── duration.js          # Duration calculation utilities
-├── tests/
-│   └── activityLog.test.js  # Test suite for activity logging
-├── firestore.rules          # Firestore security rules
-├── firestore.indexes.json   # Firestore database indexes
-├── firebase.json            # Firebase configuration
-├── script.js               # Enhanced activity logging logic
-├── index.html              # Main application interface
-├── firebase-config.js      # Firebase initialization
-└── package.json            # Project dependencies and scripts
-```
+1. **Firebase Project**: Set up a Firebase project with Firestore and Authentication
+2. **Telegram Bot**: Create a Telegram bot via @BotFather
+3. **Employee Chat IDs**: Collect Telegram chat IDs for all employees
 
-## Installation & Setup
+## 🚀 Installation & Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd time-tracker
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure Firebase**
-   - Update `firebase-config.js` with your Firebase project credentials
-   - Deploy Firestore rules: `firebase deploy --only firestore:rules`
-
-4. **Start the development server**
-   ```bash
-   npm start
-   ```
-
-## Usage
-
-### Activity Types
-
-The application supports three main activity types:
-
-- **`login`**: Work session start/end tracking
-- **`lunch`**: Lunch break duration tracking  
-- **`break`**: Short break duration tracking
-
-### Activity Flow
-
-1. **Start Activity**: Click a "Start" button to begin tracking
-   - Creates a document with `startTime`, `activityType`, and `userId`
-   - Shows as "In Progress" in the activity log
-
-2. **End Activity**: Click the corresponding "End" button
-   - Finds the matching start activity
-   - Calculates duration using the duration utility
-   - Updates the document with `endTime` and `duration`
-   - Shows completed activity with duration badge
-
-### Data Structure Example
-
-```javascript
-// Start Activity Document
-{
-  startTime: Timestamp,
-  activityType: "lunch",
-  userId: "user123",
-  userName: "John Doe"
-}
-
-// Completed Activity Document
-{
-  startTime: Timestamp,
-  endTime: Timestamp,
-  activityType: "lunch", 
-  userId: "user123",
-  userName: "John Doe",
-  duration: "00:45"
-}
-```
-
-## API Reference
-
-### Duration Utilities (`utils/duration.js`)
-
-#### `calculateDuration(start, end)`
-Calculates duration between two Date objects.
-
-```javascript
-import { calculateDuration } from './utils/duration.js';
-
-const start = new Date(2025, 0, 1, 10, 0);  // 10:00 AM
-const end = new Date(2025, 0, 1, 10, 30);    // 10:30 AM
-const duration = calculateDuration(start, end); // "00:30"
-```
-
-#### `isValidDate(date)`
-Validates if a value is a valid Date object.
-
-#### `parseDurationToMinutes(duration)`
-Converts HH:MM format to total minutes.
-
-#### `minutesToDuration(totalMinutes)`
-Converts total minutes to HH:MM format.
-
-### Activity Logging (`script.js`)
-
-#### `logActivity(activityType, isStart)`
-Enhanced activity logging with start/end pairing.
-
-```javascript
-// Start a lunch break
-logActivity('lunch', true);
-
-// End a lunch break  
-logActivity('lunch', false);
-```
-
-## Testing
-
-### Available Test Commands
+### 1. Firebase Setup
 
 ```bash
-# Test duration calculation
-npm run test:duration
+# Install Firebase CLI
+npm install -g firebase-tools
 
-# Test Firestore rules (requires Firebase emulator)
-npm run test:rules
+# Login to Firebase
+firebase login
 
-# Run Jest test suite
-npm run test:activities
+# Initialize project
+firebase init
+
+# Deploy to Firebase
+firebase deploy
 ```
 
-### Test Coverage
+### 2. Telegram Bot Setup
 
-- Duration calculation accuracy
-- Input validation and error handling
-- Activity data structure validation
-- Start/end activity pairing logic
-- Firestore security rules
+#### Create Bot
+1. Message @BotFather on Telegram
+2. Send `/newbot` command
+3. Follow instructions to create your bot
+4. Save the bot token
 
-## Firestore Security Rules
+#### Get Employee Chat IDs
+1. Have each employee start a chat with your bot
+2. Send a message to the bot
+3. Use the Telegram API or @userinfobot to get chat_id
+4. Add mappings to `js/telegram-config.js`
 
-The application enforces strict security rules:
+### 3. Configuration
+
+#### Update Telegram Configuration
+Edit `js/telegram-config.js`:
 
 ```javascript
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /activities/{activity} {
-      // Create: Requires auth + required fields + user ownership
-      allow create: if request.auth != null && 
-        request.resource.data.keys().hasAll(['startTime', 'activityType']) &&
-        request.resource.data.userId == request.auth.uid;
-        
-      // Update: Requires auth + user ownership + duration format validation
-      allow update: if request.auth != null && 
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.duration.size() <= 5;
-        
-      // Read/Delete: Requires auth + user ownership
-      allow read, delete: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+export const TELEGRAM_CONFIG = {
+    BOT_TOKEN: 'YOUR_ACTUAL_BOT_TOKEN',
+    EMPLOYEE_CHAT_IDS: {
+        'employee1@company.com': '123456789',
+        'employee2@company.com': '987654321',
+        // Add more employees
+    },
+    NOTIFICATIONS: {
+        LOGOUT_NOTIFICATION: true,
+        LATE_ARRIVAL_ALERT: true,
+        EARLY_DEPARTURE_ALERT: true,
+        EXCESSIVE_BREAK_ALERT: true
     }
-  }
-}
+};
 ```
 
-## Database Indexes
+#### Firebase Configuration
+Update `firebase-config.js` with your Firebase project settings.
 
-Optimized indexes for efficient querying:
+## 📱 Usage
 
-1. **User Activities by Time**: `userId` (ASC) + `startTime` (DESC)
-2. **Activity Pairing**: `userId` (ASC) + `activityType` (ASC) + `endTime` (ASC) + `startTime` (DESC)
+### For Employees
 
-## Development
+1. **Login**: Use Google Sign-in or phone/passcode
+2. **Start Session**: Click "Start Session" to begin work tracking
+3. **Manage Breaks**: Use lunch and break buttons as needed
+4. **End Session**: Click "End Session" when done for the day
 
-### Adding New Activity Types
+### For Managers
 
-1. Update the `activityType` validation in `firestore.rules`
-2. Add corresponding UI buttons in `index.html`
-3. Update event listeners in `script.js`
-4. Add test cases in `tests/activityLog.test.js`
+1. **Today's Summary**: View real-time status of all employees
+2. **Past Summary**: Analyze historical data with date range selection
+3. **Telegram Notifications**: Receive instant alerts and daily summaries
+4. **Activity Monitoring**: Track all employee activities in real-time
 
-### Extending Duration Utilities
+## 🔧 Configuration Options
 
-The duration utility module is designed for extensibility:
+### Notification Settings
 
 ```javascript
-// Add new duration-related functions
-export function formatDurationLong(duration) {
-  const [hours, minutes] = duration.split(':');
-  return `${hours} hours and ${minutes} minutes`;
+NOTIFICATIONS: {
+    LOGOUT_NOTIFICATION: true,      // Daily summary on logout
+    DAILY_SUMMARY: true,           // End-of-day team summary
+    WEEKLY_SUMMARY: true,          // Weekly team summary
+    LATE_ARRIVAL_ALERT: true,      // Late arrival notifications
+    EARLY_DEPARTURE_ALERT: true,   // Early departure notifications
+    EXCESSIVE_BREAK_ALERT: true    // Excessive break notifications
 }
 ```
 
-## Troubleshooting
+### Time Thresholds
+
+- **Late Arrival**: After 9:00 AM
+- **Early Departure**: Before 5:00 PM
+- **Excessive Break**: Over 1 hour total
+- **Excessive Lunch**: Over 1 hour
+
+### Customization
+
+- Modify time thresholds in `js/summary.js`
+- Customize message templates in `js/telegram-config.js`
+- Adjust UI styling in `styles.css`
+
+## 📊 Data Structure
+
+### Firestore Collections
+
+#### activities
+```javascript
+{
+    userId: "string",
+    userEmail: "string",
+    userName: "string",
+    type: "login|logout|lunch_start|lunch_end|break_start|break_end|session_start|session_end",
+    message: "string",
+    timestamp: "timestamp",
+    sessionId: "number"
+}
+```
+
+### Summary Data
+```javascript
+{
+    name: "string",
+    email: "string",
+    loginTime: "timestamp",
+    logoutTime: "timestamp",
+    totalWorkTime: "number",
+    totalBreakTime: "number",
+    totalLunchTime: "number",
+    comments: ["array of comment objects"]
+}
+```
+
+## 🔒 Security
+
+- **Authentication**: Google Sign-in and secure passcode system
+- **Firestore Rules**: Configured for user-based access control
+- **Telegram Security**: Bot token and chat ID validation
+- **Data Privacy**: Employee data is encrypted and secure
+
+## 🚀 Deployment
+
+### Firebase Hosting
+```bash
+firebase deploy
+```
+
+### Custom Domain
+1. Add custom domain in Firebase Console
+2. Update DNS records
+3. Deploy with custom domain
+
+## 📈 Monitoring & Analytics
+
+### Performance Metrics
+- Page load times
+- Real-time update latency
+- Firebase usage statistics
+- Error tracking and logging
+
+### Usage Analytics
+- Daily active users
+- Session duration patterns
+- Break time analysis
+- Attendance trends
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **ES Module Errors**: Ensure `"type": "module"` is set in `package.json`
-2. **Firebase Auth Issues**: Check Firebase configuration and authentication setup
-3. **Duration Calculation Errors**: Verify Date objects are valid before calculation
-4. **Firestore Permission Errors**: Ensure security rules are properly deployed
+1. **Telegram Notifications Not Working**
+   - Check bot token configuration
+   - Verify employee chat IDs
+   - Ensure bot has permission to send messages
+
+2. **Firebase Connection Issues**
+   - Verify Firebase configuration
+   - Check Firestore rules
+   - Ensure proper authentication setup
+
+3. **Summary Data Not Loading**
+   - Check Firestore indexes
+   - Verify date range selection
+   - Ensure proper data structure
 
 ### Debug Mode
-
-Enable debug logging by adding to `script.js`:
-
+Enable debug logging by setting:
 ```javascript
-// Enable debug logging
-const DEBUG = true;
-if (DEBUG) console.log('Activity logged:', activityData);
+localStorage.setItem('debug', 'true');
 ```
 
-## Contributing
+## 🔄 Updates & Maintenance
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+### Regular Maintenance
+- Monitor Firebase usage and costs
+- Update Telegram bot configurations
+- Review and optimize Firestore queries
+- Update employee chat ID mappings
 
-## License
+### Feature Updates
+- New notification types
+- Enhanced reporting features
+- Mobile app development
+- API integrations
 
-This project is licensed under the MIT License.
+## 📞 Support
+
+For technical support or feature requests:
+- Check the troubleshooting section
+- Review Firebase and Telegram documentation
+- Contact the development team
+
+## 📄 License
+
+This project is proprietary software for P&Z Bookings and Registration Team use only.
+
+---
+
+**Version**: 2.0.0  
+**Last Updated**: December 2024  
+**Maintained By**: Development Team

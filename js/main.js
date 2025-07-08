@@ -6,6 +6,7 @@
 import { initializeAuth, setupRecaptcha } from './auth.js';
 import { initializeUI } from './ui.js';
 import { EMAIL_TO_NAME_MAPPING } from './config.js';
+import SummaryManager from './summary.js';
 
 /**
  * Application initialization with performance optimizations
@@ -14,6 +15,7 @@ class TimeTrackerApp {
     constructor() {
         this.isInitialized = false;
         this.initPromise = null;
+        this.summaryManager = null;
     }
 
     /**
@@ -41,7 +43,8 @@ class TimeTrackerApp {
             await Promise.all([
                 this.initializeAuth(),
                 this.initializeUI(),
-                this.setupGlobalErrorHandling()
+                this.setupGlobalErrorHandling(),
+                this.initializeSummaryManager()
             ]);
             
             // Setup reCAPTCHA after DOM is ready
@@ -80,6 +83,19 @@ class TimeTrackerApp {
             initializeUI();
         }
         console.log('🎨 UI module initialized');
+    }
+
+    /**
+     * Initialize summary manager
+     */
+    async initializeSummaryManager() {
+        try {
+            this.summaryManager = new SummaryManager();
+            await this.summaryManager.init();
+            console.log('📊 Summary manager initialized');
+        } catch (error) {
+            console.error('❌ Failed to initialize summary manager:', error);
+        }
     }
 
     /**
@@ -266,6 +282,25 @@ if (process?.env?.NODE_ENV === 'development' || window.location.hostname === 'lo
     window.timeTrackerApp = app;
     console.log('🔧 App instance available as window.timeTrackerApp for debugging');
 }
+
+// Global functions for summary features
+window.refreshTodaySummary = () => {
+    if (app.summaryManager) {
+        app.summaryManager.refreshTodaySummary();
+        app.showNotification('Today\'s summary refreshed!', 'success');
+    }
+};
+
+window.loadPastSummary = () => {
+    if (app.summaryManager) {
+        app.summaryManager.loadPastSummary();
+    }
+};
+
+window.refreshActivityLog = () => {
+    // This would refresh the activity log
+    app.showNotification('Activity log refreshed!', 'success');
+};
 
 // Export for testing
 export default app;

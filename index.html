@@ -128,7 +128,7 @@
             </div>
         </div>
 
-        <!-- Enhanced Time Tracker Dashboard -->
+        <!-- Enhanced Time Tracker Dashboard with Tabs -->
         <div id="timeTrackerSection" style="display: none;">
             <!-- Welcome Card -->
             <div class="section-card">
@@ -208,6 +208,62 @@
                 </div>
                 <div id="activityLog" class="activity-log">
                     <!-- Activity items will be populated here -->
+                </div>
+            </div>
+
+            <!-- Summary Tabs Section -->
+            <div class="section-card">
+                <h4><i class="fas fa-chart-bar"></i> Employee Summaries</h4>
+                
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs" id="summaryTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab" aria-controls="today" aria-selected="true">
+                            <i class="fas fa-calendar-day"></i> Today's Summary
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab" aria-controls="past" aria-selected="false">
+                            <i class="fas fa-calendar-alt"></i> Past Summary
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="summaryTabContent">
+                    <!-- Today's Summary Tab -->
+                    <div class="tab-pane fade show active" id="today" role="tabpanel" aria-labelledby="today-tab">
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5><i class="fas fa-clock"></i> Today's Summary</h5>
+                                <button class="btn btn-outline-primary btn-sm" onclick="refreshTodaySummary()">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+                            <div id="todaySummary" class="summary-content">
+                                <!-- Today's summary will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Past Summary Tab -->
+                    <div class="tab-pane fade" id="past" role="tabpanel" aria-labelledby="past-tab">
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5><i class="fas fa-history"></i> Past Summary</h5>
+                                <div class="d-flex gap-2">
+                                    <input type="date" id="startDate" class="form-control form-control-sm" style="width: auto;">
+                                    <input type="date" id="endDate" class="form-control form-control-sm" style="width: auto;">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="loadPastSummary()">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="pastSummary" class="summary-content">
+                                <!-- Past summary will be populated here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
