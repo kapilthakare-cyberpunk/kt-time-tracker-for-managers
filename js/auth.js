@@ -101,10 +101,15 @@ function performAuthUIUpdate(user) {
  * Google Authentication with error handling
  */
 export async function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    
     try {
+        // Check if Firebase is properly loaded
+        if (!auth || !GoogleAuthProvider || !signInWithPopup) {
+            throw new Error('Firebase authentication is not properly loaded. Please check your internet connection and try refreshing the page.');
+        }
+        
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
@@ -120,7 +125,23 @@ export async function signInWithGoogle() {
         return user;
     } catch (error) {
         console.error("Google sign-in error:", error);
-        alert(error.message || 'Failed to sign in with Google');
+        
+        // Provide user-friendly error messages
+        let errorMessage = 'Failed to sign in with Google';
+        
+        if (error.code === 'auth/popup-blocked') {
+            errorMessage = 'Sign-in popup was blocked by your browser. Please allow popups for this site and try again.';
+        } else if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage = 'Sign-in was cancelled. Please try again.';
+        } else if (error.code === 'auth/network-request-failed') {
+            errorMessage = 'Network error. Please check your internet connection and try again.';
+        } else if (error.message.includes('Firebase authentication is not properly loaded')) {
+            errorMessage = 'Firebase authentication service is not available. Please check your internet connection and refresh the page.';
+        } else if (error.message.includes('Access denied')) {
+            errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
         throw error;
     }
 }
@@ -160,6 +181,12 @@ export async function logout() {
 export function setupRecaptcha() {
     if (!window.recaptchaVerifier) {
         try {
+            // Check if Firebase Auth is available
+            if (!auth || !RecaptchaVerifier) {
+                console.warn('Firebase Auth not loaded, reCAPTCHA setup skipped');
+                return;
+            }
+            
             window.recaptchaVerifier = new RecaptchaVerifier('phoneLoginBtn', {
                 'size': 'invisible',
                 'callback': () => doPhoneLogin()
@@ -169,6 +196,25 @@ export function setupRecaptcha() {
             console.error('reCAPTCHA setup error:', error);
         }
     }
+}
+
+/**
+ * Check if Firebase is properly loaded
+ */
+export function checkFirebaseStatus() {
+    const status = {
+        auth: !!auth,
+        authFunctions: !!(signInWithPopup && signOut && GoogleAuthProvider),
+        overall: false
+    };
+    
+    status.overall = status.auth && status.authFunctions;
+    
+    if (!status.overall) {
+        console.warn('Firebase status check:', status);
+    }
+    
+    return status;
 }
 
 /**
